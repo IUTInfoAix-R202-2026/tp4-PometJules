@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.exercice5;
 
 import com.google.inject.Inject;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -38,18 +39,28 @@ public class PokemonController {
     //          c -> new SimpleStringProperty(String.valueOf(c.getValue().numero())));
     //      colNom.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().nom()));
     //      colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().type()));
+    colNumero.setCellValueFactory(
+        c -> new SimpleStringProperty(String.valueOf(c.getValue().numero())));
+    colNom.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().nom()));
+    colType.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().type()));
     // 2. Abonner la TableView à la liste observable :
     //      table.setItems(viewModel.pokemonsProperty());
+    table.setItems(viewModel.pokemonsProperty());
     // 3. Lier le label résumé : labelResume <- resumeProperty().
+    labelResume.textProperty().bind(viewModel.resumeProperty());
     // 4. Câbler le formulaire :
     //      - champRecherche <-> rechercheProperty() (bidirectionnel) ;
+    champRecherche.textProperty().bindBidirectional(viewModel.rechercheProperty());
     //      - labelStatut    <-  statutProperty() (sens unique) ;
+    labelStatut.textProperty().bind(viewModel.statutProperty());
     //      - boutonAjouter désactivé tant que la recherche est vide
     //        (disableProperty().bind(rechercheProperty().isEmpty())).
+    boutonAjouter.disableProperty().bind(viewModel.rechercheProperty().isEmpty());
   }
 
   @FXML
   private void surAjouter() {
     // TODO exercice 5 : déclencher la commande d'ajout du ViewModel.
+    viewModel.ajouter();
   }
 }
