@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -52,19 +53,37 @@ public class QualificationController {
               }
             });
 
-    // TODO exercice 7 : câbler entièrement la vue sur le ViewModel.
-    //
-    // 1. Colonnes (cell value factory) : horodatage (HH:mm), fréquence (%.1f kHz),
-    //    durée (en s), statut.
-    // 2. tableSequences.setItems(viewModel.sequencesProperty());
-    // 3. Relayer la sélection : viewModel.sequenceSelectionneeProperty()
-    //       .bind(tableSequences.getSelectionModel().selectedItemProperty());
-    // 4. labelSelection <- descriptionSelectionProperty (sens unique).
-    // 5. boutonEcouter désactivé quand rien n'est sélectionné :
-    //       boutonEcouter.disableProperty().bind(viewModel.peutEcouterProperty().not());
-    // 6. zoneCommentaire <-> commentaireProperty (bidirectionnel).
-    // 7. choiceVerdict : items = viewModel.listeVerdicts(), valeur <-> verdictSaisiProperty.
-    // 8. labelVerdictGlobal <- verdictGlobalLibelleProperty.
+    // 1. Chaque colonne lit un champ de la Sequence et le met en forme.
+    colHorodatage.setCellValueFactory(
+        c -> new SimpleStringProperty(c.getValue().getHorodatage().format(HEURE)));
+    colFrequence.setCellValueFactory(
+        c -> new SimpleStringProperty(String.format("%.1f kHz", c.getValue().getFrequence())));
+    colDuree.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDuree() + " s"));
+    colStatut.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getStatut()));
+
+    // 2. Abonner la table à la liste observable du ViewModel.
+    tableSequences.setItems(viewModel.sequencesProperty());
+
+    // 3. Relayer la sélection de la table vers le ViewModel.
+    viewModel
+        .sequenceSelectionneeProperty()
+        .bind(tableSequences.getSelectionModel().selectedItemProperty());
+
+    // 4. Libellé décrivant la sélection (sens unique).
+    labelSelection.textProperty().bind(viewModel.descriptionSelectionProperty());
+
+    // 5. Bouton Écouter désactivé tant que rien n'est sélectionné.
+    boutonEcouter.disableProperty().bind(viewModel.peutEcouterProperty().not());
+
+    // 6. Zone de commentaire synchronisée dans les deux sens.
+    zoneCommentaire.textProperty().bindBidirectional(viewModel.commentaireProperty());
+
+    // 7. Liste des verdicts proposés + valeur choisie synchronisée dans les deux sens.
+    choiceVerdict.setItems(viewModel.listeVerdicts());
+    choiceVerdict.valueProperty().bindBidirectional(viewModel.verdictSaisiProperty());
+
+    // 8. Libellé du verdict global (sens unique).
+    labelVerdictGlobal.textProperty().bind(viewModel.verdictGlobalLibelleProperty());
   }
 
   @FXML
