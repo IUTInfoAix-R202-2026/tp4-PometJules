@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.exercice5;
 
 import com.google.inject.Inject;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -32,11 +33,10 @@ public class PokemonViewModel {
   public PokemonViewModel(PokemonService service) {
     this.service = service;
 
-    // TODO exercice 5 : remplir la liste observable à partir du service, puis
-    // lier `resume` au nombre d'éléments (ex : "6 Pokémon").
-    //
-    // - pokemons.setAll(service.tousLesPokemons());
-    // - resume.bind(Bindings.size(pokemons).asString().concat(" Pokémon"));
+    // On remplit la liste depuis le service, puis on lie `resume` au nombre
+    // d'éléments.
+    pokemons.setAll(service.tousLesPokemons());
+    resume.bind(Bindings.size(pokemons).asString().concat(" Pokémon"));
   }
 
   public ObservableList<Pokemon> pokemonsProperty() {
@@ -60,14 +60,19 @@ public class PokemonViewModel {
    * abonnée se mettra à jour toute seule.
    */
   public void ajouter() {
-    // TODO exercice 5 : ajouter le Pokémon recherché.
-    //
-    // 1. Demander au service le Pokémon nommé `recherche.get()`
-    //    (service.chercherParNom(...), qui renvoie un Optional).
-    // 2. S'il existe ET n'est pas déjà dans la liste : l'ajouter, vider la
-    //    recherche et le statut.
-    //    S'il est déjà présent : publier un statut (sans l'ajouter en double).
-    //    S'il n'existe pas : publier un statut "introuvable".
-    // Astuce : Optional offre ifPresentOrElse(present, absent).
+    String nom = recherche.get();
+    service
+        .chercherParNom(nom)
+        .ifPresentOrElse(
+            p -> {
+              if (!pokemons.contains(p)) {
+                pokemons.add(p);
+                recherche.set("");
+                statut.set("");
+              } else {
+                statut.set("déjà présent");
+              }
+            },
+            () -> statut.set("introuvable"));
   }
 }
